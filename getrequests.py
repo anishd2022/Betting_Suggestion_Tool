@@ -1,6 +1,11 @@
 # import libraries
 import requests  # For making HTTP requests
 import json  # For handling JSON responses
+import time
+import pandas as pd
+from datetime import datetime
+import pytz
+
 
 
 # save API key:
@@ -19,19 +24,25 @@ def make_request_and_return_response(url):
 # Function to get the list of sports names
 def list_all_sports():
     url = f"https://api.opticodds.com/api/v3/sports?key={API_Key}"
-    return make_request_and_return_response(url)
+    data = make_request_and_return_response(url)
+    # Extract sport IDs
+    sport_ids = [sport["id"] for sport in data["data"]]
+    return sport_ids
 
 # sports = list_all_sports()
-# print(json.dumps(sports, indent=2))
+# print(sports)
 
 
 # Function to get list of sports books:
 def list_all_sportsbooks():
     url = f"https://api.opticodds.com/api/v3/sportsbooks?key={API_Key}"
-    return make_request_and_return_response(url)
+    data = make_request_and_return_response(url)
+    # extract sportsbook ids:
+    sportsbook_ids = [sportsbook["id"] for sportsbook in data["data"]]
+    return sportsbook_ids
 
 # sportsbooks = list_all_sportsbooks()
-# print(json.dumps(sportsbooks, indent=2))
+# print(sportsbooks)
 
 
 # Function to get all live fixtures for a given sport:
@@ -46,8 +57,8 @@ def list_live_fixtures(sport_name):
 # Function to get live odds for a given fixture / game:
     # ODDS_FORMAT: Needs to be one of the following (AMERICAN, DECIMAL, PROBABILITY, MALAY, HONG_KONG, INDONESIAN). This defaults to AMERICAN.
     # sportsbooks that cover cricket are typically "1xbet" and "bet365"
-def get_live_odds_for_specific_game(game_ID, sportsbook, odds_format="AMERICAN"):
-    url = f"https://api.opticodds.com/api/v3/fixtures/odds?key={API_Key}&fixture_id={game_ID}&odds_format={odds_format}&sportsbook={sportsbook}"
+def get_live_odds_for_specific_game(game_ID, sportsbook, odds_format="AMERICAN", market="moneyline"):
+    url = f"https://api.opticodds.com/api/v3/fixtures/odds?key={API_Key}&fixture_id={game_ID}&odds_format={odds_format}&sportsbook={sportsbook}&market={market}"
     return make_request_and_return_response(url)
 
 # live_odds = get_live_odds_for_specific_game("2025022818E291B5", "bet365")
@@ -63,7 +74,7 @@ def get_historical_odds_for_specific_game(game_ID, sportsbook="1xbet", odds_form
 # print(json.dumps(historical_odds, indent=2))
 
 
-# Function to list all historical fixtures for a specific sport within a given time frame:
+# Function to get all historical fixtures for a specific sport within a given time frame:
     #  Start and end time follow ISO 8601 convention: ex: 2025-02-23T00:00:00Z
 def list_historical_fixtures_within_given_time_frame(sport_name, start_time, end_time):
     url = f"https://api.opticodds.com/api/v3/fixtures?key={API_Key}&sport={sport_name}&start_date_after={start_time}&start_date_before={end_time}"
@@ -79,3 +90,40 @@ def get_timeseries_historical_odds_for_specific_game(game_ID, sportsbook="1xbet"
     url = f"https://api.opticodds.com/api/v3/fixtures/odds/historical?key={API_Key}&sportsbook={sportsbook}&fixture_id={game_ID}&include_timeseries=True"
     return make_request_and_return_response(url)
 
+
+
+
+
+
+# Define the target time (7 AM PST, Feb 28, 2025)
+target_time = datetime(2025, 2, 28, 7, 0, 0, 0)  # 7 AM PST
+pst = pytz.timezone('US/Pacific')
+target_time = pst.localize(target_time)
+
+
+while datetime.now(pytz.timezone('US/Pacific')) < target_time:
+    with open("moneylineodds.csv", "a") as file:
+        data = get_live_odds_for_specific_game(game_ID="2025022818E291B5", sportsbook="bet365")
+        # Extract the odds data
+        odds_data = data["data"][0]["odds"]
+        
+        # Create a DataFrame with selected fields
+        df = pd.DataFrame([
+            {
+                "market_id": odd["market_id"],
+                "team_id": odd["team_id"],
+                "price": odd["price"],
+                "timestamp": float(odd["timestamp"])
+            }
+            for odd in odds_data
+        ])
+        
+        # Append the DataFrame to a CSV file without writing the header again
+        df.to_csv(file, index=False, header=file.tell() == 0)
+        
+        time.sleep(600)  # Pause execution for 10 minutes (600 seconds)
+        print("End after 10 minutes")
+      
+
+
+        
