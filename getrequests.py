@@ -103,7 +103,7 @@ target_time = pst.localize(target_time)
 
 while datetime.now(pytz.timezone('US/Pacific')) < target_time:
     with open("moneylineodds.csv", "a") as file:
-        data = get_live_odds_for_specific_game(game_ID="2025022818E291B5", sportsbook="bet365")
+        data = get_live_odds_for_specific_game(game_ID="2025022818E291B5", sportsbook="1xbet")
         # Extract the odds data
         odds_data = data["data"][0]["odds"]
         
@@ -121,9 +121,8 @@ while datetime.now(pytz.timezone('US/Pacific')) < target_time:
         # Append the DataFrame to a CSV file without writing the header again
         df.to_csv(file, index=False, header=file.tell() == 0)
         
-        time.sleep(600)  # Pause execution for 10 minutes (600 seconds)
-        print("End after 10 minutes")
-      
-
+        time.sleep(120)  # Pause execution for 2 minutes (120 seconds)
+        print("End after 2 minutes")
+    
 
         
