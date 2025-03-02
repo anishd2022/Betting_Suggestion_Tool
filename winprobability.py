@@ -103,6 +103,6 @@ def get_timeseries_win_graph(filename, team_id):
 # MAIN:
 # ENGLAND team ID: 624D16F40C2863F9
 # SOUTH AFRICA team ID: 2EE145593BBBB158
-get_timeseries_win_graph("2025030159F80420.csv", "624D16F40C2863F9")
+get_timeseries_win_graph("2025030159F80420.csv", "2EE145593BBBB158")
 
 

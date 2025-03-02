@@ -18,13 +18,17 @@ def make_request_and_return_response(url):
     if response.status_code == 200:  # Check if the request was successful
         return response.json()  # Return the JSON response
     else:
-        return f"Error: {response.status_code}, {response.text}"  # Return an error message
+        print(f"Error: {response.status_code}, {response.text}")
+        return json.dumps(None) # Return an error message
 
 
 # Function to get the list of sports names
 def list_all_sports():
     url = f"https://api.opticodds.com/api/v3/sports?key={API_Key}"
     data = make_request_and_return_response(url)
+    if (data == 'null'):
+        print("No sports found, returned empty list")
+        return []
     # Extract sport IDs
     sport_ids = [sport["id"] for sport in data["data"]]
     return sport_ids
@@ -37,6 +41,9 @@ def list_all_sports():
 def list_all_sportsbooks():
     url = f"https://api.opticodds.com/api/v3/sportsbooks?key={API_Key}"
     data = make_request_and_return_response(url)
+    if (data == 'null'):
+        print("No sportsbooks found, returned empty list")
+        return []
     # extract sportsbook ids:
     sportsbook_ids = [sportsbook["id"] for sportsbook in data["data"]]
     return sportsbook_ids
@@ -95,16 +102,20 @@ def get_timeseries_historical_odds_for_specific_game(game_ID, sportsbook="1xbet"
 
 
 
-# Define the target time (9 AM PST, Mar 1, 2025)
-target_time = datetime(2025, 3, 1, 9, 0, 0, 0)  # 9 AM PST
+# Define the target time (9 AM PST, Mar 2, 2025)
+target_time = datetime(2025, 3, 2, 9, 0, 0, 0)  # 9 AM PST
 pst = pytz.timezone('US/Pacific')
 target_time = pst.localize(target_time)
 
-fixture_id = "2025030159F80420"
+fixture_id = "20250302A6347226"
+
 
 while datetime.now(pytz.timezone('US/Pacific')) < target_time:
     with open(f"{fixture_id}.csv", "a") as file:
         data = get_live_odds_for_specific_game(game_ID=fixture_id, sportsbook="1xbet")
+        if data is None or data == 'null' or "data" not in data or not data["data"]:
+            print("No data received. Stopping the loop...")
+            break  
         # Extract the odds data
         odds_data = data["data"][0]["odds"]
         
@@ -124,6 +135,7 @@ while datetime.now(pytz.timezone('US/Pacific')) < target_time:
         
         time.sleep(120)  # Pause execution for 2 minutes (120 seconds)
         print("End after 2 minutes")
-    
+ 
 
-        
+ 
+      
