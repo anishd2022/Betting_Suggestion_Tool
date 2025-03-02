@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 
 # Get the path to the python-espncricinfo directory
 module_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "python-espncricinfo"))
@@ -18,4 +19,7 @@ import requests
 
 
 m = Match('1466423')
-print(m.result)
+data = m.innings_list
+
+# Pretty-printing the JSON data
+print(json.dumps(data, indent=4))

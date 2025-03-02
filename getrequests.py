@@ -95,15 +95,16 @@ def get_timeseries_historical_odds_for_specific_game(game_ID, sportsbook="1xbet"
 
 
 
-# Define the target time (7 AM PST, Feb 28, 2025)
-target_time = datetime(2025, 2, 28, 7, 0, 0, 0)  # 7 AM PST
+# Define the target time (9 AM PST, Mar 1, 2025)
+target_time = datetime(2025, 3, 1, 9, 0, 0, 0)  # 9 AM PST
 pst = pytz.timezone('US/Pacific')
 target_time = pst.localize(target_time)
 
+fixture_id = "2025030159F80420"
 
 while datetime.now(pytz.timezone('US/Pacific')) < target_time:
-    with open("moneylineodds.csv", "a") as file:
-        data = get_live_odds_for_specific_game(game_ID="2025022818E291B5", sportsbook="1xbet")
+    with open(f"{fixture_id}.csv", "a") as file:
+        data = get_live_odds_for_specific_game(game_ID=fixture_id, sportsbook="1xbet")
         # Extract the odds data
         odds_data = data["data"][0]["odds"]
         
