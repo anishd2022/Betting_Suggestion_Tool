@@ -102,12 +102,12 @@ def get_timeseries_historical_odds_for_specific_game(game_ID, sportsbook="1xbet"
 
 
 
-# Define the target time (9 AM PST, Mar 2, 2025)
-target_time = datetime(2025, 3, 2, 9, 0, 0, 0)  # 9 AM PST
+# Define the target time (9 AM PST, Mar 4, 2025)
+target_time = datetime(2025, 3, 4, 9, 0, 0, 0)  # 9 AM PST
 pst = pytz.timezone('US/Pacific')
 target_time = pst.localize(target_time)
 
-fixture_id = "20250302A6347226"
+fixture_id = "2025030483EF05B8"
 
 
 while datetime.now(pytz.timezone('US/Pacific')) < target_time:
@@ -129,6 +129,7 @@ while datetime.now(pytz.timezone('US/Pacific')) < target_time:
             }
             for odd in odds_data
         ])
+        print(df)
         
         # Append the DataFrame to a CSV file without writing the header again
         df.to_csv(file, index=False, header=file.tell() == 0)

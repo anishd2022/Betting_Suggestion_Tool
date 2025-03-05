@@ -9,16 +9,16 @@ import pytz
 def convert_american_to_probability(odd_1, odd_2):
     def american_to_implied_prob(odd):
         if (odd > 0):
-            return 1 - (100 / (odd + 100))
+            return (100 / (odd + 100))
         else:
-            return 1 - (abs(odd) / (abs(odd) + 100))
+            return (abs(odd) / (abs(odd) + 100))
     prob_1 = american_to_implied_prob(odd_1)
     prob_2 = american_to_implied_prob(odd_2)
     
     # normalize probabilities to sum to 1:
     total_prob = prob_1 + prob_2
     return (prob_1 / total_prob, prob_2 / total_prob)
-    
+
     
 
 # function that converts .csv file into pandas df
@@ -33,9 +33,34 @@ def remove_duplicate_rows(data):
 
 
 def assign_correct_probabilities(df):
-    df["win_probability"] = df.apply(lambda row: row["prob_team_1"] if row["team_id"] == df.iloc[0]["team_id"] else row["prob_team_2"], axis=1)
-    df = df.drop(columns=["prob_team_1", "prob_team_2"])
-    return df
+    # Group by timestamp
+    grouped = df.groupby("timestamp")
+
+    # Function to calculate probabilities within each group
+    def process_group(group):
+        if len(group) != 2:
+            return group  # Skip if there's an unexpected number of teams
+        
+        # Extract team_id and odds
+        team_1, team_2 = group["team_id"].values
+        odd_1, odd_2 = group["price"].values
+
+        # Compute probabilities
+        prob_1, prob_2 = convert_american_to_probability(odd_1, odd_2)
+
+        # Assign probabilities back to the correct team
+        group.loc[group["team_id"] == team_1, "win_probability"] = prob_1
+        group.loc[group["team_id"] == team_2, "win_probability"] = prob_2
+
+        return group
+
+    # Apply function to each group
+    df = grouped.apply(process_group)
+    
+    # Drop unnecessary columns
+    df = df.drop(columns=["prob_team_1", "prob_team_2"], errors="ignore")
+    
+    return df.reset_index(drop=True)
 
 
 
@@ -65,7 +90,9 @@ def process_odds_data(filename):
 # function to get win probability graph:
 def get_timeseries_win_graph(filename, team_id):
     df = process_odds_data(filename)
+    print(df)
     df = assign_correct_probabilities(df)
+    print(df)
     
     # Ensure the timestamp column is in datetime format
     df["timestamp"] = pd.to_datetime(df["timestamp"], unit="s")
@@ -103,6 +130,9 @@ def get_timeseries_win_graph(filename, team_id):
 # MAIN:
 # ENGLAND team ID: 624D16F40C2863F9
 # SOUTH AFRICA team ID: 2EE145593BBBB158
-get_timeseries_win_graph("2025030159F80420.csv", "2EE145593BBBB158")
+# INDIA team ID: DC1A6C534B251307
+# NEW ZEALAND team ID: A689823131CD080D
+# AUSTRALIA team ID: 99A62C66D530C117
+get_timeseries_win_graph("2025030483EF05B8.csv", "DC1A6C534B251307")
 
 

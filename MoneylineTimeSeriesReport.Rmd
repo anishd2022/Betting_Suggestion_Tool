@@ -1,0 +1,66 @@
+---
+title: "OpticOdds API"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE, echo=FALSE}
+# include necessary libraries:
+library(ggplot2)
+library(tidyverse)
+```
+
+
+
+## Intro:
+
+- I got the OpticOdds API one week trial key on Wednesday Feb 26th, 2025. Since then, I have experimented with various sportsbooks and situations to see what odds data we can get. 
+- I found that most of their coverage for cricket odds comes from a sportsbook called "1xbet" (which is **not** legal in the US). They have cricket coverage for "bet365" as well, but it is not as complete, especially when it comes to live match odds
+- Before the game starts (pre-match odds), almost all markets are shown in for both sportsbooks in the API responses, however when the game starts (live odds), NO markets for bet365 are accessible via API, while quite a few markets are accessible on 1xbet. For this reason, I decided to stick with tracking 1xbet odds
+- My next step was to find out what markets were available live in-game for 1xbet...I was looking for "moneyline", and "total runs scored in innings", however I only found "moneyline".
+
+
+## Tracking Moneyline Odds over time:
+
+- I decided to track the moneyline odds for both teams on two minute intervals throughout the course of the England vs South Africa game on March 1st, 2025. 
+- I put my odds in a csv file which looked like the following:
+
+```{r, echo=FALSE}
+sample_moneyline_data <- read.csv("2025030159F80420.csv")
+sample_moneyline_data[40:50,]
+```
+
+- I then decided to remove duplicate rows, since whenever the odds did not change within a 2 min span, the timestamp also remained the same
+- I converted the odds to an implied win probability and then plotted that against timestamp for the course of the game
+
+
+## Plots:
+
+- Here is my plot for England's win probability over time, as predicted by 1xbet sports book, against South Africa on March 1st:
+
+![]("EngWinProbvsRSA.png")
+
+- This can be compared to the CricInfo win probability over the course of the game:
+
+![]("CricInfoWinProb.png")
+
+
+## Problems / Things to consider going forward:
+
+- I only have data on the timestamp for these odds. I don't know the position of the game (ex: runs, balls, wickets) at that specific timestamp. I was wondering if cricinfo has any timestamp data in their ball by ball and how we could access it. 
+- We only have moneyline odds for 1xbet. I could not find live odds for total runs in the inning. 
+- The pricing for the OpticOdds API can range anywhere between 3K to 5K dollars per month depending on our needs and how many markets / leagues we access. Do we want to pay that cost, is something to think about especially considering we are only able to get moneyline odds and not total runs odds, that too for only one sportsbook for the time being. I talked with one of their members (Abe Granoff), and he told me they are working to eventually expand their cricket coverage for OpticOdds.   
+- I was thinking that a backup option to get these total runs odds is to either web scrape or to have someone manually enter the data in a google sheets / excel document for each game by checking the live score and checking the live projected innings score on a sportsbook like bet365 once per over. 
+
+
+
+
+
+
+
+
+
+
