@@ -114,8 +114,10 @@ def get_timeseries_win_graph(filename, team_id):
     
     # Plot the win probability over time
     plt.figure(figsize=(12, 6))
-    plt.plot(team_df["timestamp"], team_df["win_probability"], marker="o", linestyle="-", label=f"Team {team_id}")
+    plt.plot(team_df["timestamp"], team_df["win_probability"], marker="", linestyle="-", label=f"Team {team_id}")
 
+    plt.ylim(0, 1)
+    plt.axhline(y=0.5, color='red', linestyle='--', linewidth=2)
     plt.xlabel("Timestamp")
     plt.ylabel("Win Probability")
     plt.title(f"Win Probability Over Time for Team {team_id}")
@@ -133,6 +135,6 @@ def get_timeseries_win_graph(filename, team_id):
 # INDIA team ID: DC1A6C534B251307
 # NEW ZEALAND team ID: A689823131CD080D
 # AUSTRALIA team ID: 99A62C66D530C117
-get_timeseries_win_graph("2025030483EF05B8.csv", "DC1A6C534B251307")
+get_timeseries_win_graph("202503057B0DF45A.csv", "A689823131CD080D")
 
 
