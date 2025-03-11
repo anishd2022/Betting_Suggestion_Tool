@@ -2,6 +2,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import pytz
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import time
 
 
 
@@ -85,6 +88,25 @@ def process_odds_data(filename):
     return df.merge(pivot_df[["prob_team_1", "prob_team_2"]], on="timestamp", how="left")
 
 
+# function to get polyline points from CricInfo url:
+def get_polyline_data_from_cricinfo(url):
+    driver = webdriver.Chrome()
+    driver.get(url)
+    
+    time.sleep(5)
+    
+    # extract polyline data
+    polyline = driver.find_element(By.TAG_NAME, "polyline")  # Find the polyline element
+    print("FOUND POLYLINE ELEMENT!!!")
+    points_str = polyline.get_attribute("points")  # Extract the points attribute
+    print(points_str)
+    
+    # return points:
+    return points_str
+
+
+
+
 
 
 # function to get win probability graph:
@@ -135,6 +157,6 @@ def get_timeseries_win_graph(filename, team_id):
 # INDIA team ID: DC1A6C534B251307
 # NEW ZEALAND team ID: A689823131CD080D
 # AUSTRALIA team ID: 99A62C66D530C117
-get_timeseries_win_graph("202503057B0DF45A.csv", "A689823131CD080D")
+get_timeseries_win_graph("20250309E1880B18.csv", "A689823131CD080D")
 
 

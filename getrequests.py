@@ -102,12 +102,12 @@ def get_timeseries_historical_odds_for_specific_game(game_ID, sportsbook="1xbet"
 
 
 
-# Define the target time (9 AM PST, Mar 5, 2025)
-target_time = datetime(2025, 3, 5, 9, 0, 0, 0)  # 9 AM PST
+# Define the target time (10 AM PST, Mar 9, 2025)
+target_time = datetime(2025, 3, 9, 10, 0, 0, 0)  # 10 AM PST
 pst = pytz.timezone('US/Pacific')
 target_time = pst.localize(target_time)
 
-fixture_id = "202503057B0DF45A"
+fixture_id = "20250309E1880B18"
 
 
 while datetime.now(pytz.timezone('US/Pacific')) < target_time:
