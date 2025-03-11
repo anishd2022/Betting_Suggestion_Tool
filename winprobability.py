@@ -1,5 +1,6 @@
 # import necessary libraries
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import pytz
 from selenium import webdriver
@@ -110,7 +111,7 @@ def get_polyline_data_from_cricinfo(url):
 
 
 # function to get win probability graph:
-def get_timeseries_win_graph(filename, team_id):
+def get_timeseries_win_graph_overlay(filename, team_id, cricinfo_url):
     df = process_odds_data(filename)
     print(df)
     df = assign_correct_probabilities(df)
@@ -134,9 +135,31 @@ def get_timeseries_win_graph(filename, team_id):
         print(f"No data found for team ID {team_id}.")
         return
     
+    # get min and max timestamps:
+    min_timestamp = team_df["timestamp"].min()
+    max_timestamp = team_df["timestamp"].max()
+    
+    # Now work on overlaying cricinfo graph:
+    points_string = get_polyline_data_from_cricinfo(cricinfo_url)
+    # Parse the data
+    points = np.array([list(map(float, p.split(','))) for p in points_string.split()])
+    
+    # Extract x and y values
+    x_values = points[:, 0] / 3
+    y_values = points[:, 1]
+
+    # Normalize x_values to match the time range
+    x_values = (x_values - np.min(x_values)) / (np.max(x_values) - np.min(x_values))  # Normalize to [0,1]
+    x_timestamps = min_timestamp + (x_values * (max_timestamp - min_timestamp))  # Scale to match time range
+    # Normalize y-values (assuming max pixel height of ~200 for win probability)
+    y_values = (200 - y_values) / 200  # Invert and scale to range [0,1]
+    
     # Plot the win probability over time
     plt.figure(figsize=(12, 6))
-    plt.plot(team_df["timestamp"], team_df["win_probability"], marker="", linestyle="-", label=f"Team {team_id}")
+    # Plot original win probability
+    plt.plot(team_df["timestamp"], team_df["win_probability"], marker="", linestyle="-", label=f"Odds Data 1xbet - Team {team_id}")
+    # Plot Cricinfo win probability
+    plt.plot(x_timestamps, y_values, marker="", linestyle="--", label="Cricinfo Data", color="orange")
 
     plt.ylim(0, 1)
     plt.axhline(y=0.5, color='red', linestyle='--', linewidth=2)
@@ -157,6 +180,6 @@ def get_timeseries_win_graph(filename, team_id):
 # INDIA team ID: DC1A6C534B251307
 # NEW ZEALAND team ID: A689823131CD080D
 # AUSTRALIA team ID: 99A62C66D530C117
-get_timeseries_win_graph("20250309E1880B18.csv", "A689823131CD080D")
+get_timeseries_win_graph_overlay("2025030483EF05B8.csv", "99A62C66D530C117", "https://www.espncricinfo.com/series/icc-champions-trophy-2024-25-1459031/australia-vs-india-1st-semi-final-1466426/match-report")
 
 
