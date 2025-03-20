@@ -111,9 +111,8 @@ fixture_id = "20250309E1880B18"
 
 
 while datetime.now(pytz.timezone('US/Pacific')) < target_time:
-    # Save inside 'Data' folder 
-    file_path = os.path.join("Data", "test.csv") 
-    # file_path = os.path.join("Data", f"{fixture_id}.csv")
+    # Save inside 'Data' folder  
+    file_path = os.path.join("Data", f"{fixture_id}.csv")
     
     with open(file_path, "a") as file:
         data = get_live_odds_for_specific_game(game_ID=fixture_id, sportsbook="1xbet")

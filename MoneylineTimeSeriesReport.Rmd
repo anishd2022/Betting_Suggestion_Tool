@@ -14,7 +14,7 @@ library(tidyverse)
 ```
 
 
-## Goal:
+# Goal:
 
 - The Unicorns have developed tools that do predictions that are outwardly more accurate than the win probability you see on CricInfo. 
 - We want to see how these prediction tools compare to the "state of the art", in other words what the sports books are using. We can do this by comparing the Unicorns' prediction tool to the live odds put out by various sports books. 
@@ -22,13 +22,13 @@ library(tidyverse)
   + In an ideal scenario, we find out that the Unicorns' tools are significantly more accurate than the sports books, in which case we would have the potential to monetize this tool. 
   
 
-## Phase 1:
+# Phase 1:
 
 1. **Figure out how to extract the odds data from sports books**
 2. **Check if the CricInfo win probability and the implied win probability for sports books significantly differ**
 
 
-## Phase 2:
+# Phase 2:
 
 1. **Identify major differences in terms of reaction to events between CricInfo and sports books, if any**
 2. **Understand how the Unicorns' prediction tool's algorithm predicts in comparison to sports books**
@@ -36,7 +36,7 @@ library(tidyverse)
 4. **More detailed analysis and checking the viability of any monetization of the tool**
 
 
-## Research on sports books / APIs:
+# Research on sports books / APIs:
 
 - I wanted to first check the cricket related markets available for various sports books in the US
 - I shortlisted a lot of commonly used sportsbooks in the US and created a quick table to compare them
@@ -58,7 +58,7 @@ library(tidyverse)
 - After extensive search, looking at sites like BetsAPI, OpticOdds, PropOdds, The Odds API, among other sites, I settled on **OpticOdds API**, as they seemed to be the best in terms of clear communication, lots of coverage, and they were a relatively reputable site. 
 
 
-## Optic Odds API evaluation:
+# Optic Odds API evaluation:
 
 - I was able to get in contact with an OpticOdds representative (Abe Granoff) and schedule a meeting with him. He gave me a 10 day trial key with full access to their API, and I used those 10 days to find out what all their API covered. I found that they had extensive coverage of cricket odds on **1xbet** as well as **bet365**. 
 - On 1xbet specifically, I was able to gather live moneyline odds as the game progressed, so I decided to use 1xbet moneyline odds for the rest of my analysis.
@@ -66,25 +66,51 @@ library(tidyverse)
 - One advantage of OpticOdds is that if we do decide to come on as a client, they will try to expand coverage to our needs. For example, they currently do not have coverage of live "total innings runs" odds, however he said his team will work on it. They are constantly expanding coverage and he continues to update me whenever they do.  
 
 
-- go to code and make sure data files that get generated end up going in the data folder...
+# Champions Trophy Game Analysis:
 
-## Champions Trophy Game Analysis:
+- I collected live moneyline odds data from 1xbet for 5 different Champions Trophy games. I then calculated the implied win probabilities for each team and plotted them on a graph. My goal was to create a graphic similar to the win probability graphic on CricInfo. An example of one of the graphs is shown below:
+- The graph shows Australia's win probability over time against India in the Champions Trophy Semifinal
 
-- plot individual graphs, explaining method of how I generated
-
-
-## Comaprison against CricInfo:
-
-- explain how I plotted the comparison, despite time vs balls x-axis
-- plot comparison graphs
+![](Images/AUSwinProbvsIND_SemiFinal_NoOverlay.png)
 
 
-## Next Steps:
+# Comaprison against CricInfo:
+
+- The next step was to compare the CricInfo win probability with the sports book win probability, and the best way to visualize this comparison would be to overlay the two lines on the same graphic. Unfortunately, the CricInfo graph updates every **over** (x-axis = overs), while my moneyline graph updates every **2 minutes** (x-axis = timestamp). 
+- I was able to scale the overs to match to timestamps by making it such that the first over corresponded to the start time of the game, while the last over corresponded to the last available open moneyline market time (which usually occurs near the end of the game). For this reason, the overlaying isn't perfect, but it is a quick and easy way to visually assess how close the two lines correlate
+
+### Australia win probability vs. India in the Semifinal
+
+![](Images/AUSwinProbvsIND_SemiFinal.png)
+
+### England win probability vs. South Africa in the Group Stage
+
+![](Images/ENGwinProbvsRSA_GroupStage.png)
+
+### India win probability vs. New Zealand in the Group Stage
+
+![](Images/INDwinProbvsNZ_GroupStage.png)
+
+### New Zealand win probability vs. India in the Final
+
+![](Images/NZwinProbvsIND_Final.png)
+
+### New Zealand win probability vs. South Africa in the Semifinal
+
+![](Images/NZwinProbvsRSA_SemiFinal.png)
+
+
+
+# Next Steps:
 
 - what data would be ideal from CricInfo for me to compare better
+- time vs balls (x-axis)
 - Ability to run our algorithm live and compare with books (what would help with phase 2)
 
 
+# TO DO:
+
+- Give link to data...
 
 
 
@@ -92,43 +118,11 @@ library(tidyverse)
 
 
 
-## Intro:
-
-- I got the OpticOdds API one week trial key on Wednesday Feb 26th, 2025. Since then, I have experimented with various sportsbooks and situations to see what odds data we can get. 
-- I found that most of their coverage for cricket odds comes from a sportsbook called "1xbet" (which is **not** legal in the US). They have cricket coverage for "bet365" as well, but it is not as complete, especially when it comes to live match odds
-- Before the game starts (pre-match odds), almost all markets are shown in for both sportsbooks in the API responses, however when the game starts (live odds), NO markets for bet365 are accessible via API, while quite a few markets are accessible on 1xbet. For this reason, I decided to stick with tracking 1xbet odds
-- My next step was to find out what markets were available live in-game for 1xbet...I was looking for "moneyline", and "total runs scored in innings", however I only found "moneyline".
-
-
-## Tracking Moneyline Odds over time:
-
-- I decided to track the moneyline odds for both teams on two minute intervals throughout the course of the England vs South Africa game on March 1st, 2025. 
-- I put my odds in a csv file which looked like the following:
-
-```{r, echo=FALSE}
-sample_moneyline_data <- read.csv("2025030159F80420.csv")
-sample_moneyline_data[40:50,]
-```
-
-- I then decided to remove duplicate rows, since whenever the odds did not change within a 2 min span, the timestamp also remained the same
-- I converted the odds to an implied win probability and then plotted that against timestamp for the course of the game
-
-
-## Plots:
-
-- Here is my plot for England's win probability over time, as predicted by 1xbet sports book, against South Africa on March 1st:
-
-
-- This can be compared to the CricInfo win probability over the course of the game:
 
 
 
-## Problems / Things to consider going forward:
 
-- I only have data on the timestamp for these odds. I don't know the position of the game (ex: runs, balls, wickets) at that specific timestamp. I was wondering if cricinfo has any timestamp data in their ball by ball and how we could access it. 
-- We only have moneyline odds for 1xbet. I could not find live odds for total runs in the inning. 
-- The pricing for the OpticOdds API can range anywhere between 3K to 5K dollars per month depending on our needs and how many markets / leagues we access. Do we want to pay that cost, is something to think about especially considering we are only able to get moneyline odds and not total runs odds, that too for only one sportsbook for the time being. I talked with one of their members (Abe Granoff), and he told me they are working to eventually expand their cricket coverage for OpticOdds.   
-- I was thinking that a backup option to get these total runs odds is to either web scrape or to have someone manually enter the data in a google sheets / excel document for each game by checking the live score and checking the live projected innings score on a sportsbook like bet365 once per over. 
+
 
 
 
