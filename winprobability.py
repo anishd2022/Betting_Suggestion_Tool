@@ -111,7 +111,7 @@ def get_polyline_data_from_cricinfo(url):
 
 
 # function to get win probability graph:
-def get_timeseries_win_graph_overlay(filename, team_id, cricinfo_url):
+def get_timeseries_win_graph_overlay(filename, team_id, cricinfo_url, overlay=True):
     df = process_odds_data(filename)
     print(df)
     df = assign_correct_probabilities(df)
@@ -159,7 +159,8 @@ def get_timeseries_win_graph_overlay(filename, team_id, cricinfo_url):
     # Plot original win probability
     plt.plot(team_df["timestamp"], team_df["win_probability"], marker="", linestyle="-", label=f"Odds Data 1xbet - Team {team_id}")
     # Plot Cricinfo win probability
-    plt.plot(x_timestamps, y_values, marker="", linestyle="--", label="Cricinfo Data", color="orange")
+    if overlay == True:
+        plt.plot(x_timestamps, y_values, marker="", linestyle="--", label="Cricinfo Data", color="orange")
 
     plt.ylim(0, 1)
     plt.axhline(y=0.5, color='red', linestyle='--', linewidth=2)
@@ -180,6 +181,6 @@ def get_timeseries_win_graph_overlay(filename, team_id, cricinfo_url):
 # INDIA team ID: DC1A6C534B251307
 # NEW ZEALAND team ID: A689823131CD080D
 # AUSTRALIA team ID: 99A62C66D530C117
-get_timeseries_win_graph_overlay("2025030483EF05B8.csv", "99A62C66D530C117", "https://www.espncricinfo.com/series/icc-champions-trophy-2024-25-1459031/australia-vs-india-1st-semi-final-1466426/match-report")
+get_timeseries_win_graph_overlay("2025030483EF05B8.csv", "99A62C66D530C117", "https://www.espncricinfo.com/series/icc-champions-trophy-2024-25-1459031/australia-vs-india-1st-semi-final-1466426/match-report", overlay=True)
 
 

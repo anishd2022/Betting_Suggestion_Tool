@@ -5,7 +5,7 @@ import time
 import pandas as pd
 from datetime import datetime
 import pytz
-
+import os
 
 
 # save API key:
@@ -102,8 +102,8 @@ def get_timeseries_historical_odds_for_specific_game(game_ID, sportsbook="1xbet"
 
 
 
-# Define the target time (10 AM PST, Mar 9, 2025)
-target_time = datetime(2025, 3, 9, 10, 0, 0, 0)  # 10 AM PST
+# Define the target time (10 AM PST, Mar 20, 2025)
+target_time = datetime(2025, 3, 20, 10, 0, 0, 0)  # 10 AM PST
 pst = pytz.timezone('US/Pacific')
 target_time = pst.localize(target_time)
 
@@ -111,7 +111,11 @@ fixture_id = "20250309E1880B18"
 
 
 while datetime.now(pytz.timezone('US/Pacific')) < target_time:
-    with open(f"{fixture_id}.csv", "a") as file:
+    # Save inside 'Data' folder 
+    file_path = os.path.join("Data", "test.csv") 
+    # file_path = os.path.join("Data", f"{fixture_id}.csv")
+    
+    with open(file_path, "a") as file:
         data = get_live_odds_for_specific_game(game_ID=fixture_id, sportsbook="1xbet")
         if data is None or data == 'null' or "data" not in data or not data["data"]:
             print("No data received. Stopping the loop...")
