@@ -1,5 +1,7 @@
 ---
 title: "Win Probability Comparison"
+author: "Anish Deshpande"
+date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
@@ -68,8 +70,14 @@ library(tidyverse)
 
 # Champions Trophy Game Analysis:
 
-- I collected live moneyline odds data from 1xbet for 5 different Champions Trophy games. I then calculated the implied win probabilities for each team and plotted them on a graph. My goal was to create a graphic similar to the win probability graphic on CricInfo. An example of one of the graphs is shown below:
-- The graph shows Australia's win probability over time against India in the Champions Trophy Semifinal
+- I collected live moneyline odds data from 1xbet for 5 different Champions Trophy games at 2 minute intervals. I then calculated the implied win probabilities for each team and plotted them on a graph. My goal was to create a graphic similar to the win probability graphic on CricInfo. An example of one of the graphs is shown below:
+- You can click on the link below to view the raw data, stored in .csv files
+
+\textcolor{blue}{\href{https://github.com/anishd2022/CricketBetting/tree/main/Data}{Link to Data}}
+
+
+
+### Australia win probability vs. India in the Semifinal (No CricInfo overlay)
 
 ![](Images/AUSwinProbvsIND_SemiFinal_NoOverlay.png)
 
@@ -99,18 +107,16 @@ library(tidyverse)
 
 ![](Images/NZwinProbvsRSA_SemiFinal.png)
 
-
+- While the two lines follow very similar trends in each of the graphs, there are some instances where one line may react differently to an event, meaning the algorithms used by CricInfo and 1xbet are different. Take, for example, the third image (India's win probability vs. New Zealand in the group stage). At the beginning of the game, India lost quick wickets and were 30/3 at one point. We can see this reflected as a dip in India's win probability: the reaction by CricInfo is quite extreme as the win probability goes all the way down to 20%, while the 1xbet implied probability dipped only slightly to about 40%. 
 
 # Next Steps:
 
-- what data would be ideal from CricInfo for me to compare better
-- time vs balls (x-axis)
-- Ability to run our algorithm live and compare with books (what would help with phase 2)
+- Ideally, if I had timestamp data from CricInfo so that I could know the time at which each ball was bowled, I could accurately overlay the graphics.
+- Having the ability to run the Unicorns' algorithm live and compare it with the sports books would help further in accomplishing phase 2. 
+- As mentioned earlier, if we do come on as a client for OpticOdds at about $5K / month, they will prioritize any gaps in market coverage as per our needs, so even though we are only getting moneyline data for now, we can expect to eventually receive data for total runs scored in an innings during the course of the game. Once we have this data, we can effectively compare it with the Unicorns' prediction tool and see if it performs better. 
 
 
-# TO DO:
 
-- Give link to data...
 
 
 

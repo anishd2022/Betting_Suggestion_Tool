@@ -101,6 +101,14 @@ def get_timeseries_historical_odds_for_specific_game(game_ID, sportsbook="1xbet"
 
 
 
+# MAIN:
+#   When running this file, first adjust the target time to be the time when you want your program to stop running,
+#   typically when the game finishes.
+#   Next, adjust the fixture_id to be the fixture_id for your game of interest, as recorded on OpticOdds API
+# Output:
+#   .csv file --> columns titled market_id, team_id, price, and timestamp. The file is saved in the data folder
+#                 and is given the same name as the fixture_id parameter. 
+
 
 # Define the target time (10 AM PST, Mar 20, 2025)
 target_time = datetime(2025, 3, 20, 10, 0, 0, 0)  # 10 AM PST

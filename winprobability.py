@@ -10,6 +10,11 @@ import time
 
 
 # function that takes in two american odds and returns decimal probability of winning for each team:
+# Parameters:
+#   odd_1: numeric --> the odds of the first team
+#   odd_2: numeric --> the odds of the second team
+# Return:
+#   tuple: (implied decimal win probability for first team, implied decimal win probability for second team)
 def convert_american_to_probability(odd_1, odd_2):
     def american_to_implied_prob(odd):
         if (odd > 0):
@@ -26,16 +31,32 @@ def convert_american_to_probability(odd_1, odd_2):
     
 
 # function that converts .csv file into pandas df
+# Parameters:
+#   filename: string --> name of the .csv file
+# Return: 
+#   pandas df that follows the structure of the .csv file
 def convert_csv_to_df(filename):
     df = pd.read_csv(filename)
     return df
     
 
 # function to remove duplicate rows from a pandas df:
+# Parameters:
+#   data: pandas dataframe
+# Return:
+#   data --> same pandas dataframe without duplicate rows
 def remove_duplicate_rows(data):
     return data.drop_duplicates()
 
 
+# Parameters:
+#   df: pandas dataframe --> must be set up so that each timestamp comes in groups of 2
+#                            dataframe must have columns market_id, team_id, price, timestamp, prob_team_1, prob_team_2
+# Return:
+#   pandas dataframe --> same as input df except with an additional column titled win_probability
+#                        prob_team_1, and prob_team_2 columns are taken out, and replaced by win_probability
+#                        this is the implied win probability of that team at that time given the prices of that team and its
+#                        opponent in the same timestamp group. 
 def assign_correct_probabilities(df):
     # Group by timestamp
     grouped = df.groupby("timestamp")
@@ -68,7 +89,13 @@ def assign_correct_probabilities(df):
 
 
 
-# function to process odds data and add a win probability column in the pandas df:
+# Parameters:
+#   df: pandas dataframe --> must be set up so that each timestamp comes in groups of 2
+#                            dataframe must have columns market_id, team_id, price, and timestamp
+# Return:
+#   pandas dataframe --> same as input df except with an additional column titled prob_team_1 and prob_team_2
+#                        these are the implied win probabilities of that teams at that time given the prices of that team and its
+#                        opponent in the same timestamp group. 
 def process_odds_data(filename):
     df = pd.read_csv(filename)
     df = remove_duplicate_rows(df)
@@ -90,6 +117,10 @@ def process_odds_data(filename):
 
 
 # function to get polyline points from CricInfo url:
+# Parameters:
+#   url: string --> the CricInfo url of the game of interest, make sure win probability graph is present on that web page
+# Return:
+#   list of tuples representing x,y coordinates of points on a graph
 def get_polyline_data_from_cricinfo(url):
     driver = webdriver.Chrome()
     driver.get(url)
@@ -111,6 +142,13 @@ def get_polyline_data_from_cricinfo(url):
 
 
 # function to get win probability graph:
+# Parameters:
+#   filename: string --> name of .csv file (give relative filepath)
+#   team_id: string --> team_id of the team of interest as shown in OpticOdds API
+#   cricinfo_url: string --> the CricInfo url of the game of interest, make sure win probability graph is present on that web page
+#   overlay: bool --> if True, CricInfo probability will be shown, if False, then only sportsbook probability will be shown
+# Return:
+#   matplotlib graph of win probability over time as predicted by CricInfo and 1xbet sportsbook
 def get_timeseries_win_graph_overlay(filename, team_id, cricinfo_url, overlay=True):
     df = process_odds_data(filename)
     print(df)
