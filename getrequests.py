@@ -6,10 +6,11 @@ import pandas as pd
 from datetime import datetime
 import pytz
 import os
+from urllib.parse import urlencode
 
 
 # save API key:
-API_Key = "752f772f-7a59-4f14-b066-d1921a4f2c64"  # this is a one week trial key
+API_Key = "3d23e92b-6924-4ca7-a68a-5ccef6dc29bf"  # this is a one week trial key
 
 
 # function to make get requests and return JSON response:
@@ -64,9 +65,34 @@ def list_live_fixtures(sport_name):
 # Function to get live odds for a given fixture / game:
     # ODDS_FORMAT: Needs to be one of the following (AMERICAN, DECIMAL, PROBABILITY, MALAY, HONG_KONG, INDONESIAN). This defaults to AMERICAN.
     # sportsbooks that cover cricket are typically "1xbet" and "bet365"
-def get_live_odds_for_specific_game(game_ID, sportsbook, odds_format="AMERICAN", market="moneyline"):
-    url = f"https://api.opticodds.com/api/v3/fixtures/odds?key={API_Key}&fixture_id={game_ID}&odds_format={odds_format}&sportsbook={sportsbook}&market={market}"
-    return make_request_and_return_response(url)
+def get_live_odds_for_specific_game(game_ID, sportsbook, odds_format="AMERICAN", market=None):
+    base_url = "https://api.opticodds.com/api/v3/fixtures/odds"
+    
+    # Start with required params
+    query_params = [
+        ("key", API_Key),
+        ("fixture_id", game_ID),
+        ("odds_format", odds_format),
+    ]
+
+    # Add sportsbook(s)
+    if isinstance(sportsbook, list):
+        query_params.extend([("sportsbook", sb) for sb in sportsbook])
+    else:
+        query_params.append(("sportsbook", sportsbook))
+
+    # Add market(s) ONLY if provided
+    if market is not None:
+        if isinstance(market, list):
+            query_params.extend([("market", m) for m in market])
+        else:
+            query_params.append(("market", market))
+
+    # Build query string
+    query_string = urlencode(query_params, doseq=True)
+    full_url = f"{base_url}?{query_string}"
+
+    return make_request_and_return_response(full_url)
 
 # live_odds = get_live_odds_for_specific_game("2025022818E291B5", "bet365")
 # print(json.dumps(live_odds, indent=2))
@@ -101,6 +127,25 @@ def get_timeseries_historical_odds_for_specific_game(game_ID, sportsbook="1xbet"
 
 
 
+
+
+ 
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # MAIN:
 #   When running this file, first adjust the target time to be the time when you want your program to stop running,
 #   typically when the game finishes.
@@ -110,44 +155,109 @@ def get_timeseries_historical_odds_for_specific_game(game_ID, sportsbook="1xbet"
 #                 and is given the same name as the fixture_id parameter. 
 
 
-# Define the target time (10 AM PST, Mar 20, 2025)
-target_time = datetime(2025, 3, 20, 10, 0, 0, 0)  # 10 AM PST
-pst = pytz.timezone('US/Pacific')
-target_time = pst.localize(target_time)
-
-fixture_id = "20250309E1880B18"
-
-
-while datetime.now(pytz.timezone('US/Pacific')) < target_time:
-    # Save inside 'Data' folder  
-    file_path = os.path.join("Data", f"{fixture_id}.csv")
+# Define the target time (10 AM PST, May 21, 2025)
+def main():
+    # save API key:
+    API_Key = "3d23e92b-6924-4ca7-a68a-5ccef6dc29bf"  # this is a one week trial key
     
-    with open(file_path, "a") as file:
-        data = get_live_odds_for_specific_game(game_ID=fixture_id, sportsbook="1xbet")
-        if data is None or data == 'null' or "data" not in data or not data["data"]:
-            print("No data received. Stopping the loop...")
-            break  
-        # Extract the odds data
-        odds_data = data["data"][0]["odds"]
-        
-        # Create a DataFrame with selected fields
-        df = pd.DataFrame([
-            {
-                "market_id": odd["market_id"],
-                "team_id": odd["team_id"],
-                "price": odd["price"],
-                "timestamp": float(odd["timestamp"])
-            }
-            for odd in odds_data
-        ])
-        print(df)
-        
-        # Append the DataFrame to a CSV file without writing the header again
-        df.to_csv(file, index=False, header=file.tell() == 0)
-        
-        time.sleep(120)  # Pause execution for 2 minutes (120 seconds)
-        print("End after 2 minutes")
- 
+    # CONFIG
+    fixture_id = "2025052186F36D55"
+    sportsbooks = ["bet365", "1xbet", "draftkings"]  # Add as many as you want
+    target_time = datetime(2025, 5, 21, 10, 0, 0)  # 10 AM PST
+    target_time = pytz.timezone('US/Pacific').localize(target_time)
 
- 
-      
+    # FILE SETUP
+    os.makedirs("Data", exist_ok=True)
+    file_path = os.path.join("Data", f"{fixture_id}.csv")
+
+    # LOOP
+    while datetime.now(pytz.timezone('US/Pacific')) < target_time:
+        collection_time = datetime.now(pytz.timezone("US/Pacific")).strftime("%Y-%m-%d %H:%M:%S")
+        all_rows = []
+
+        for book in sportsbooks:
+            data = get_live_odds_for_specific_game(game_ID=fixture_id, sportsbook=book)
+
+            if not data or "data" not in data or not data["data"]:
+                print(f"No data received for {book}. Skipping...")
+                continue
+
+            odds_data = data["data"][0].get("odds", [])
+
+            for odd in odds_data:
+                name = odd.get("market", "").lower()
+                market_id = odd.get("market_id", "").lower()
+
+                # 🔍 FILTER markets: only include "moneyline" or anything with "team_total" in market_id
+                if not (
+                    market_id == "moneyline" or
+                    market_id == "team_total" or
+                    (market_id.startswith("1st_") and market_id.endswith("_overs_team_total"))
+                ):
+                    continue
+
+                team_id = odd.get("team_id")
+                price = odd.get("price")
+                points = odd.get("points") if market_id != "moneyline" else ""
+
+                # Determine over_under
+                if name == "moneyline":
+                    over_under = "over"
+                elif odd.get("selection_line") in ["over", "under"]:
+                    over_under = odd["selection_line"]
+                else:
+                    over_under = ""
+
+                all_rows.append({
+                    "timestamp": collection_time,
+                    "sportsbook": book,
+                    "market_id": market_id,
+                    "team_id": team_id,
+                    "over_under": over_under,
+                    "price": price,
+                    "points": points
+                })
+
+        # Save to CSV
+        if all_rows:
+            df = pd.DataFrame(all_rows)
+            print(df)
+
+            file_exists = os.path.isfile(file_path)
+            df.to_csv(file_path, mode="a", index=False, header=not file_exists)
+
+        # Wait 30 seconds
+        print(f"✅ Logged odds at {collection_time}, waiting 30 seconds...")
+        time.sleep(30)
+        
+    
+    
+    
+    '''
+    # games = list_historical_fixtures_within_given_time_frame("cricket", "2025-05-19T00:00:00Z", "2025-05-20T00:00:00Z")
+    # print(games)
+    
+    # get_historical_odds_for_specific_game()
+    fixtures = list_live_fixtures("cricket")
+    # print(fixtures)
+    live_game_odds = get_live_odds_for_specific_game(
+        game_ID="20250520BA6B20DC",
+        sportsbook=["1xbet", "bet365"],
+        market=["moneyline", "1st_inning_total_runs"]
+    )
+    print(live_game_odds)
+    '''
+
+
+if __name__ == "__main__":
+    main()  
+    
+
+
+# we want to get historical data on first innings runs scored and moneyline (as well as live data) 
+# "market_id": "1st_inning_total_runs"
+# fixture ID for CSK vs RR game on 2025-05-20T14:00:00Z:  20250520BA6B20DC
+# fixture ID for GT vs DC game on 2025-05-18T14:00:00Z:   20250518C03F595A
+# fixture ID for MI vs DC game on 2025-05-21T14:00:00Z:   2025052186F36D55
+
+
