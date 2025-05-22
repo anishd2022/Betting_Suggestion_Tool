@@ -246,9 +246,10 @@ def main():
     target_time = datetime(2025, 5, 22, 11, 20, 0)  # 11:20 AM PST
     interval = 30
     
+    '''
     record_odds_data_for_game(fixture_id, program_end_time=target_time, 
                               seconds_between_requests=interval, sportsbooks=sportsbooks)
-    
+    '''
     
     
 
