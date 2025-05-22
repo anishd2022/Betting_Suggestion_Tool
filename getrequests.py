@@ -124,46 +124,21 @@ def get_timeseries_historical_odds_for_specific_game(game_ID, sportsbook="1xbet"
     return make_request_and_return_response(url)
 
 
-
-
-
-
-
- 
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# MAIN:
-#   When running this file, first adjust the target time to be the time when you want your program to stop running,
-#   typically when the game finishes.
-#   Next, adjust the fixture_id to be the fixture_id for your game of interest, as recorded on OpticOdds API
+# params:
+#   game_ID: string corresponding to game_ID as seen in OpticOdds API
+#   program_end_time: when you want the script to automatically stop running (in pacific standard time)
+#       Ex: datetime(2025, 5, 22, 11, 20, 0), corresponds to May 22nd, 2025, at 11:20am PST
+#   seconds_between_requests: numeric --> how many seconds between requests to capture new data
+#   sportsbooks: array of strings --> ex: ["bet365", "1xbet", "bet365"] --> data will only be collected from these 3 books
 # Output:
-#   .csv file --> columns titled market_id, team_id, price, and timestamp. The file is saved in the data folder
-#                 and is given the same name as the fixture_id parameter. 
+#   A .csv file with market odds for moneyline and and total_runs markets for various sportsbooks, 
+#       recording timestamps as well. The .csv file is saved in the Data folder with naming convention {game_ID}.csv
 
-
-# Define the target time (10 AM PST, May 21, 2025)
-def main():
-    # save API key:
-    API_Key = "3d23e92b-6924-4ca7-a68a-5ccef6dc29bf"  # this is a one week trial key
-    
+def record_odds_data_for_game(game_ID, program_end_time, seconds_between_requests, sportsbooks):
     # CONFIG
-    fixture_id = "2025052186F36D55"
-    sportsbooks = ["bet365", "1xbet", "draftkings"]  # Add as many as you want
-    target_time = datetime(2025, 5, 21, 10, 0, 0)  # 10 AM PST
+    fixture_id = game_ID
+    sportsbooks = sportsbooks  # Add as many as you want
+    target_time = program_end_time  # 11:20 AM PST
     target_time = pytz.timezone('US/Pacific').localize(target_time)
 
     # FILE SETUP
@@ -227,26 +202,56 @@ def main():
             df.to_csv(file_path, mode="a", index=False, header=not file_exists)
 
         # Wait 30 seconds
-        print(f"✅ Logged odds at {collection_time}, waiting 30 seconds...")
-        time.sleep(30)
-        
+        print(f"✅ Logged odds at {collection_time}, waiting {seconds_between_requests} seconds...")
+        time.sleep(seconds_between_requests)
+
+
+
+
+
+ 
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# MAIN:
+#   When running this file, first adjust the target time to be the time when you want your program to stop running,
+#   typically when the game finishes.
+#   Next, adjust the fixture_id to be the fixture_id for your game of interest, as recorded on OpticOdds API
+# Output:
+#   .csv file --> columns titled market_id, team_id, price, and timestamp. The file is saved in the data folder
+#                 and is given the same name as the fixture_id parameter. 
+
+
+# Define the target time (10 AM PST, May 21, 2025)
+def main():
+    # save API key:
+    API_Key = "3d23e92b-6924-4ca7-a68a-5ccef6dc29bf"  # this is a one week trial key
+    
+    # CONFIG
+    fixture_id = "2025052256402ED0"
+    sportsbooks = ["bet365", "1xbet", "draftkings"]  # Add as many as you want
+    target_time = datetime(2025, 5, 22, 11, 20, 0)  # 11:20 AM PST
+    interval = 30
+    
+    record_odds_data_for_game(fixture_id, program_end_time=target_time, 
+                              seconds_between_requests=interval, sportsbooks=sportsbooks)
     
     
     
-    '''
-    # games = list_historical_fixtures_within_given_time_frame("cricket", "2025-05-19T00:00:00Z", "2025-05-20T00:00:00Z")
-    # print(games)
-    
-    # get_historical_odds_for_specific_game()
-    fixtures = list_live_fixtures("cricket")
-    # print(fixtures)
-    live_game_odds = get_live_odds_for_specific_game(
-        game_ID="20250520BA6B20DC",
-        sportsbook=["1xbet", "bet365"],
-        market=["moneyline", "1st_inning_total_runs"]
-    )
-    print(live_game_odds)
-    '''
+
 
 
 if __name__ == "__main__":
@@ -259,5 +264,5 @@ if __name__ == "__main__":
 # fixture ID for CSK vs RR game on 2025-05-20T14:00:00Z:  20250520BA6B20DC
 # fixture ID for GT vs DC game on 2025-05-18T14:00:00Z:   20250518C03F595A
 # fixture ID for MI vs DC game on 2025-05-21T14:00:00Z:   2025052186F36D55
-
+# fixture ID for GT vs LSG game on 2025-05-22T14:00:00Z:  2025052256402ED0
 
