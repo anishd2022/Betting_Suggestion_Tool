@@ -54,8 +54,22 @@ def main():
     team_name_1 = team_names[0]
     team_name_2 = team_names[1]
 
+    # get team scores:
+    score_divs = soup.find_all("div", class_="ds-text-compact-m ds-text-typo ds-text-right ds-whitespace-nowrap")
+    scores = []
+    for div in score_divs:
+        strong_tag = div.find("strong")
+        if strong_tag:
+            score_text = strong_tag.get_text(strip=True)
+            scores.append(score_text)
+    runs_wickets = [score.split("/") if "/" in score else ("N/A", "N/A") for score in scores]
+    team1_runs, team1_wkts = runs_wickets[0]
+    team2_runs, team2_wkts = runs_wickets[1]
+    
     # Combine into array and print
-    result = [timestamp, ball_number, team_name_1, team_name_2]
+    result = [timestamp, ball_number, 
+              team_name_1, team1_runs, team1_wkts, 
+              team_name_2, team2_runs, team2_wkts]
     print(result)
         
 
