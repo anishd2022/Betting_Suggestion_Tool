@@ -7,17 +7,7 @@ from datetime import datetime
 import pytz
 
 
-
-
-
-
-
-
-
-def main():
-    # initialize url:
-    url = "https://www.espncricinfo.com/series/ipl-2025-1449924/gujarat-titans-vs-lucknow-super-giants-64th-match-1473502/ball-by-ball-commentary"
-
+def get_live_score(url):
     # Set up headless Chrome
     chrome_options = Options()
     chrome_options.add_argument("--headless")
@@ -47,8 +37,8 @@ def main():
 
     # Get team names
     team_names = []
-    team_span = soup.find_all("span", class_="ds-text-tight-l ds-font-bold ds-text-typo hover:ds-text-typo-primary ds-block ds-truncate")
-    for span in team_span:
+    team_spans = soup.select("span.ds-text-tight-l.ds-font-bold.ds-text-typo.ds-block.ds-truncate")
+    for span in team_spans:
         team_names.append(span.get_text(strip=True))
     
     team_name_1 = team_names[0]
@@ -64,27 +54,35 @@ def main():
             scores.append(score_text)
     runs_wickets = [score.split("/") if "/" in score else ("N/A", "N/A") for score in scores]
     team1_runs, team1_wkts = runs_wickets[0]
-    team2_runs, team2_wkts = runs_wickets[1]
+    if len(runs_wickets) > 1:
+        team2_runs, team2_wkts = runs_wickets[1]
+    else:
+        team2_runs, team2_wkts = "N/A", "N/A"
     
     # Combine into array and print
     result = [timestamp, ball_number, 
               team_name_1, team1_runs, team1_wkts, 
               team_name_2, team2_runs, team2_wkts]
-    print(result)
-        
-
-    
-    
-    '''
-    over_ball_spans = soup.find_all("span", class_="ds-text-tight-s ds-font-regular ds-mb-1 lg:ds-mb-0 lg:ds-mr-3 ds-block ds-text-center ds-text-typo-mid1")
-
-    # Extract and print the text values
-    for span in over_ball_spans:
-        print(span.get_text(strip=True))
-    '''
 
     # end session
     driver.quit()
+    
+    # return result:
+    return(result)
+
+
+
+
+
+
+
+
+def main():
+    # initialize url:
+    # url = "https://www.espncricinfo.com/series/ipl-2025-1449924/gujarat-titans-vs-lucknow-super-giants-64th-match-1473502/ball-by-ball-commentary"
+    url = "https://www.espncricinfo.com/series/zimbabwe-in-england-2025-1392687/england-vs-zimbabwe-only-test-1392691/ball-by-ball-commentary"
+    live_score = get_live_score(url)
+    print(live_score)
 
 if __name__ == "__main__":
     main()
