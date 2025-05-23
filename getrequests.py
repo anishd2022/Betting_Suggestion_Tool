@@ -172,6 +172,7 @@ def record_odds_data_for_game(game_ID, program_end_time, seconds_between_request
                     continue
 
                 team_id = odd.get("team_id")
+                team_name = odd.get("selection")
                 price = odd.get("price")
                 points = odd.get("points") if market_id != "moneyline" else ""
 
@@ -188,6 +189,7 @@ def record_odds_data_for_game(game_ID, program_end_time, seconds_between_request
                     "sportsbook": book,
                     "market_id": market_id,
                     "team_id": team_id,
+                    "team_name": team_name,
                     "over_under": over_under,
                     "price": price,
                     "points": points
@@ -241,15 +243,15 @@ def main():
     API_Key = "3d23e92b-6924-4ca7-a68a-5ccef6dc29bf"  # this is a one week trial key
     
     # CONFIG
-    fixture_id = "2025052256402ED0"
+    fixture_id = "20250523A8163F7D"
     sportsbooks = ["bet365", "1xbet", "draftkings"]  # Add as many as you want
-    target_time = datetime(2025, 5, 22, 11, 20, 0)  # 11:20 AM PST
+    target_time = datetime(2025, 5, 23, 11, 20, 0)  # 11:20 AM PST
     interval = 30
     
-    '''
+    
     record_odds_data_for_game(fixture_id, program_end_time=target_time, 
                               seconds_between_requests=interval, sportsbooks=sportsbooks)
-    '''
+    
     
     
 
@@ -266,4 +268,4 @@ if __name__ == "__main__":
 # fixture ID for GT vs DC game on 2025-05-18T14:00:00Z:   20250518C03F595A
 # fixture ID for MI vs DC game on 2025-05-21T14:00:00Z:   2025052186F36D55
 # fixture ID for GT vs LSG game on 2025-05-22T14:00:00Z:  2025052256402ED0
-
+# fixture ID for RCB vs SRH game on 2025-05-23T14:00:00Z: 20250523A8163F7D
