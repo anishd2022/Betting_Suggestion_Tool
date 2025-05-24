@@ -276,13 +276,13 @@ def record_odds_data_for_game(game_ID, program_end_time, seconds_between_request
 
 
 
-def record_odds_data_and_live_score_for_game(cricinfo_url, cricinfo_csv_filepath, optic_odds_game_ID, program_end_time, 
+def record_odds_data_and_live_score_for_game(cricinfo_url, optic_odds_game_ID, program_end_time, 
                                              seconds_between_requests, sportsbooks):
     # config:
     fixture_id = optic_odds_game_ID
     target_time = pytz.timezone('US/Pacific').localize(program_end_time)
     # Output CSV file
-    csv_filename = cricinfo_csv_filepath
+    csv_filename = f"Data/{optic_odds_game_ID}cricinfo.csv"
     headers = [
         "timestamp", "ball_number", 
         "team_1_name", "team_1_runs", "team_1_wickets", 
