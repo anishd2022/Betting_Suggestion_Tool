@@ -411,7 +411,6 @@ def main():
     sportsbooks = ["bet365", "1xbet", "draftkings"]  # Add as many as you want
     target_time = datetime(2025, 5, 24, 11, 20, 0)  # 11:20 AM PST
     interval = 20
-    cricinfo_filepath = "Data/LiveScoreTesting.csv"
     cricinfo_url = "https://www.espncricinfo.com/series/ipl-2025-1449924/royal-challengers-bengaluru-vs-sunrisers-hyderabad-65th-match-1473503/ball-by-ball-commentary"
     
     '''
@@ -419,7 +418,7 @@ def main():
                               seconds_between_requests=interval, sportsbooks=sportsbooks)
     '''
     
-    record_odds_data_and_live_score_for_game(cricinfo_url, cricinfo_filepath, fixture_id, target_time, 
+    record_odds_data_and_live_score_for_game(cricinfo_url, fixture_id, target_time, 
                                              interval, sportsbooks)
     
     
