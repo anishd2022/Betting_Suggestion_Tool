@@ -7,6 +7,10 @@ from datetime import datetime
 import pytz
 import os
 from urllib.parse import urlencode
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
+import csv
 
 
 # save API key:
@@ -124,6 +128,69 @@ def get_timeseries_historical_odds_for_specific_game(game_ID, sportsbook="1xbet"
     return make_request_and_return_response(url)
 
 
+def get_live_score(url):
+    # Set up headless Chrome
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
+    # Initialize the driver
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(url)
+
+    # Wait for JavaScript to load content (optional)
+    # time.sleep(5)
+
+    # Grab the page source and parse it
+    soup = BeautifulSoup(driver.page_source, "html.parser")
+    # print(soup.prettify())
+    
+    # Get ball number
+    ball_span = soup.find("span", class_="ds-text-tight-s ds-font-regular ds-mb-1 lg:ds-mb-0 lg:ds-mr-3 ds-block ds-text-center ds-text-typo-mid1")
+    ball_number = ball_span.get_text(strip=True) if ball_span else "N/A"
+    # Get current timestamp in PST
+    pst = pytz.timezone("America/Los_Angeles")
+    timestamp = datetime.now(pst).strftime("%Y-%m-%d %H:%M:%S")
+
+    # Get team names
+    team_names = []
+    team_spans = soup.select("span.ds-text-tight-l.ds-font-bold.ds-text-typo.ds-block.ds-truncate")
+    for span in team_spans:
+        team_names.append(span.get_text(strip=True))
+    team_name_1 = team_names[0]
+    team_name_2 = team_names[1]
+
+    # get team scores:
+    score_divs = soup.find_all("div", class_="ds-text-compact-m ds-text-typo ds-text-right ds-whitespace-nowrap")
+    scores = []
+    for div in score_divs:
+        strong_tag = div.find("strong")
+        if strong_tag:
+            score_text = strong_tag.get_text(strip=True)
+            scores.append(score_text)
+    runs_wickets = [score.split("/") if "/" in score else (score, 10) for score in scores]
+    team1_runs, team1_wkts = runs_wickets[0]
+    if len(runs_wickets) > 1:
+        team2_runs, team2_wkts = runs_wickets[1]
+    else:
+        team2_runs, team2_wkts = "N/A", "N/A"
+    
+    # Combine into array and print
+    result = [timestamp, ball_number, 
+              team_name_1, team1_runs, team1_wkts, 
+              team_name_2, team2_runs, team2_wkts]
+
+    # end session
+    driver.quit()
+    
+    # return result:
+    return(result)
+
+
+
 # params:
 #   game_ID: string corresponding to game_ID as seen in OpticOdds API
 #   program_end_time: when you want the script to automatically stop running (in pacific standard time)
@@ -209,6 +276,105 @@ def record_odds_data_for_game(game_ID, program_end_time, seconds_between_request
 
 
 
+def record_odds_data_and_live_score_for_game(cricinfo_url, cricinfo_csv_filepath, optic_odds_game_ID, program_end_time, 
+                                             seconds_between_requests, sportsbooks):
+    # config:
+    fixture_id = optic_odds_game_ID
+    target_time = pytz.timezone('US/Pacific').localize(program_end_time)
+    # Output CSV file
+    csv_filename = cricinfo_csv_filepath
+    headers = [
+        "timestamp", "ball_number", 
+        "team_1_name", "team_1_runs", "team_1_wickets", 
+        "team_2_name", "team_2_runs", "team_2_wickets"
+    ]
+    
+    # Create and write headers if file is new
+    try:
+        with open(csv_filename, mode="x", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(headers)
+    except FileExistsError:
+        pass  # File already exists; skip writing headers
+    
+    # FILE SETUP
+    os.makedirs("Data", exist_ok=True)
+    file_path = os.path.join("Data", f"{fixture_id}.csv")
+    
+    # LOOP
+    while datetime.now(pytz.timezone('US/Pacific')) < target_time:
+        collection_time = datetime.now(pytz.timezone("US/Pacific")).strftime("%Y-%m-%d %H:%M:%S")
+        all_odds_rows = []
+        
+        for book in sportsbooks:
+            data = get_live_odds_for_specific_game(game_ID=fixture_id, sportsbook=book)
+            
+            if not data or "data" not in data or not data["data"]:
+                print(f"No data received for {book}. Skipping...")
+                continue
+            
+            odds_data = data["data"][0].get("odds", [])
+            
+            for odd in odds_data:
+                name = odd.get("market", "").lower()
+                market_id = odd.get("market_id", "").lower()
+                
+                # 🔍 FILTER markets: only include "moneyline" or anything with "team_total" in market_id
+                if not (
+                    market_id == "moneyline" or
+                    market_id == "team_total" or
+                    (market_id.startswith("1st_") and market_id.endswith("_overs_team_total"))
+                ):
+                    continue
+                
+                team_id = odd.get("team_id")
+                team_name = odd.get("selection")
+                price = odd.get("price")
+                points = odd.get("points") if market_id != "moneyline" else ""
+                
+                # Determine over_under
+                if name == "moneyline":
+                    over_under = "over"
+                elif odd.get("selection_line") in ["over", "under"]:
+                    over_under = odd["selection_line"]
+                else:
+                    over_under = ""
+                    
+                all_odds_rows.append({
+                    "timestamp": collection_time,
+                    "sportsbook": book,
+                    "market_id": market_id,
+                    "team_id": team_id,
+                    "team_name": team_name,
+                    "over_under": over_under,
+                    "price": price,
+                    "points": points
+                })
+    
+        # Save to CSV
+        if all_odds_rows:
+            df = pd.DataFrame(all_odds_rows)
+            print(df)
+
+            file_exists = os.path.isfile(file_path)
+            df.to_csv(file_path, mode="a", index=False, header=not file_exists)
+        
+        try:
+            cricinfo_row = get_live_score(cricinfo_url)
+            with open(csv_filename, mode="a", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow(cricinfo_row)
+            print(f"🟢 Row added at {cricinfo_row[0]}")
+        except Exception as e:
+            print(f"❌ Error during fetch: {e}")
+        
+        # Wait 30 seconds
+        print(f"✅ Logged odds at {collection_time}, waiting {seconds_between_requests} seconds...")
+        time.sleep(seconds_between_requests)
+    
+
+
+
 
 
  
@@ -228,30 +394,33 @@ def record_odds_data_for_game(game_ID, program_end_time, seconds_between_request
 
 
 
-# MAIN:
-#   When running this file, first adjust the target time to be the time when you want your program to stop running,
-#   typically when the game finishes.
-#   Next, adjust the fixture_id to be the fixture_id for your game of interest, as recorded on OpticOdds API
-# Output:
-#   .csv file --> columns titled market_id, team_id, price, and timestamp. The file is saved in the data folder
-#                 and is given the same name as the fixture_id parameter. 
 
 
-# Define the target time (10 AM PST, May 21, 2025)
+
+
+
+
+
+
 def main():
     # save API key:
     API_Key = "3d23e92b-6924-4ca7-a68a-5ccef6dc29bf"  # this is a one week trial key
     
     # CONFIG
-    fixture_id = "20250523A8163F7D"
+    fixture_id = "20250524DBD36DBB"
     sportsbooks = ["bet365", "1xbet", "draftkings"]  # Add as many as you want
-    target_time = datetime(2025, 5, 23, 11, 20, 0)  # 11:20 AM PST
-    interval = 30
+    target_time = datetime(2025, 5, 24, 11, 20, 0)  # 11:20 AM PST
+    interval = 20
+    cricinfo_filepath = "Data/LiveScoreTesting.csv"
+    cricinfo_url = "https://www.espncricinfo.com/series/ipl-2025-1449924/royal-challengers-bengaluru-vs-sunrisers-hyderabad-65th-match-1473503/ball-by-ball-commentary"
     
-    
+    '''
     record_odds_data_for_game(fixture_id, program_end_time=target_time, 
                               seconds_between_requests=interval, sportsbooks=sportsbooks)
+    '''
     
+    record_odds_data_and_live_score_for_game(cricinfo_url, cricinfo_filepath, fixture_id, target_time, 
+                                             interval, sportsbooks)
     
     
 
@@ -268,4 +437,5 @@ if __name__ == "__main__":
 # fixture ID for GT vs DC game on 2025-05-18T14:00:00Z:   20250518C03F595A
 # fixture ID for MI vs DC game on 2025-05-21T14:00:00Z:   2025052186F36D55
 # fixture ID for GT vs LSG game on 2025-05-22T14:00:00Z:  2025052256402ED0
-# fixture ID for RCB vs SRH game on 2025-05-23T14:00:00Z: 20250523A8163F7D
+# fixture ID for RCB vs SRH game on 2025-05-23T14:00:00Z: 20250523A8163F7D  (very little data collected for this game)
+# fixture ID for PBKS vs DC game on 2025-05-24T14:00:00Z: 20250524DBD36DBB  
