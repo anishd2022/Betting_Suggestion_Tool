@@ -19,12 +19,16 @@ API_Key = "3d23e92b-6924-4ca7-a68a-5ccef6dc29bf"  # this is a one week trial key
 
 # function to make get requests and return JSON response:
 def make_request_and_return_response(url):
-    response = requests.get(url)  # Make the GET request
-    if response.status_code == 200:  # Check if the request was successful
-        return response.json()  # Return the JSON response
-    else:
-        print(f"Error: {response.status_code}, {response.text}")
-        return json.dumps(None) # Return an error message
+    try:
+        response = requests.get(url, timeout=10)  # Safely timeout after 10 seconds
+        response.raise_for_status()  # Raises exception for bad responses (e.g., 404)
+        return response.json()
+    except requests.exceptions.Timeout:
+        print(f"⚠️ Timeout occurred for URL: {url}")
+        return None  # So your main loop knows to skip this iteration
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Request failed: {e}")
+        return None
 
 
 # Function to get the list of sports names
@@ -374,12 +378,43 @@ def record_odds_data_and_live_score_for_game(cricinfo_url, optic_odds_game_ID, p
     
 
 
+def join_game_tables(game_csv_path, cricinfo_csv_path):
+    # Read both CSVs with timestamps parsed as datetime
+    game_df = pd.read_csv(game_csv_path, parse_dates=["timestamp"])
+    cricinfo_df = pd.read_csv(cricinfo_csv_path, parse_dates=["timestamp"])
 
+    # Sort by timestamp (required for merge_asof)
+    game_df.sort_values("timestamp", inplace=True)
+    cricinfo_df.sort_values("timestamp", inplace=True)
+
+    # Perform as-of merge: join on nearest earlier or equal timestamp
+    merged_df = pd.merge_asof(
+        game_df,
+        cricinfo_df,
+        on="timestamp",
+        direction="backward"
+    )
+
+    # Drop rows that didn't match a cricinfo row (i.e., no prior timestamp found)
+    merged_df = merged_df.dropna(subset=["ball_number"])
+
+    # Construct the output file name with 'Final.csv' suffix
+    base_filename = os.path.basename(game_csv_path).replace(".csv", "Final.csv")
+    output_path = os.path.join("Data", base_filename)
+
+    # Save to new CSV file
+    merged_df.to_csv(output_path, index=False)
+
+    print(f"✅ Final joined file written to {output_path}")
+    return merged_df
 
 
  
 
  
+
+
+
 
 
 
@@ -407,21 +442,19 @@ def main():
     API_Key = "3d23e92b-6924-4ca7-a68a-5ccef6dc29bf"  # this is a one week trial key
     
     # CONFIG
-    fixture_id = "20250524DBD36DBB"
+    fixture_id = "20250529A0F6AFE9"
     sportsbooks = ["bet365", "1xbet", "draftkings"]  # Add as many as you want
-    target_time = datetime(2025, 5, 24, 11, 20, 0)  # 11:20 AM PST
+    target_time = datetime(2025, 5, 29, 11, 30, 0)  # 11:30 AM PST
     interval = 20
-    cricinfo_url = "https://www.espncricinfo.com/series/ipl-2025-1449924/royal-challengers-bengaluru-vs-sunrisers-hyderabad-65th-match-1473503/ball-by-ball-commentary"
+    cricinfo_url = "https://www.espncricinfo.com/series/ipl-2025-1449924/punjab-kings-vs-royal-challengers-bengaluru-qualifier-1-1473508/ball-by-ball-commentary"
+    odds_filepath = f"Data/{fixture_id}.csv"
+    game_filepath = f"Data/{fixture_id}cricinfo.csv"
     
-    '''
-    record_odds_data_for_game(fixture_id, program_end_time=target_time, 
-                              seconds_between_requests=interval, sportsbooks=sportsbooks)
-    '''
     
     record_odds_data_and_live_score_for_game(cricinfo_url, fixture_id, target_time, 
                                              interval, sportsbooks)
     
-    
+    join_game_tables(odds_filepath, game_filepath)
 
 
 
@@ -438,3 +471,9 @@ if __name__ == "__main__":
 # fixture ID for GT vs LSG game on 2025-05-22T14:00:00Z:  2025052256402ED0
 # fixture ID for RCB vs SRH game on 2025-05-23T14:00:00Z: 20250523A8163F7D  (very little data collected for this game)
 # fixture ID for PBKS vs DC game on 2025-05-24T14:00:00Z: 20250524DBD36DBB  
+# fixture ID for CSK vs GT game on 2025-05-25T10:00:00Z:  20250525E889FEB3  (data until 12.1 overs of first innings)
+# fixture ID for LSG vs RCB game on 2025-05-27T14:00:00Z: 202505278A99102C  (only first innings data is accurate)
+# fixture ID for PBKS vs RCB game on 2025-05-29T14:00:00Z: 20250529A0F6AFE9  (most likely didn't run this because I didn't want wifi to disconnect before my meeting w/ Vishal and Venkat)
+
+
+
