@@ -11,6 +11,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import csv
+from dotenv import load_dotenv
 
 
 # save API key:
@@ -438,8 +439,10 @@ def join_game_tables(game_csv_path, cricinfo_csv_path):
 
 
 def main():
+    load_dotenv()  # load variables from .env into environment
+    
     # save API key:
-    API_Key = "3d23e92b-6924-4ca7-a68a-5ccef6dc29bf"  # this is a one week trial key
+    API_Key = os.getenv("API_KEY")  # this is a one week trial key
     
     # CONFIG
     fixture_id = "20250529A0F6AFE9"
