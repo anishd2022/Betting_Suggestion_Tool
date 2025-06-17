@@ -26,6 +26,14 @@
     pip install -r requirements.txt
     ```
 
+### Optic Odds API Key:
+
+- To run the program successfully by gathering real-time odds data, you will need access to an OpticOdds API trial key, and you will have to [contact](https://opticodds.com/contact) them first in order to recieve one.
+- Once you have this trial key, set up your .env file accordingly
+    ```
+    API_KEY={your_api_key}
+    ```
+
 ## Code Files: 
 
 Run `getrequests.py` with appropriate parameters during a match to produce three .csv files for the current game_id, which will track verious market odds and match status at regular intervals over the course of the game. The files will be stored in the `Data/` folder. 
@@ -36,5 +44,9 @@ Run `winprobability.py` with appropriate parameters for the `get_timeseries_win_
 
 - The data files are named with the convention {game_id}.csv (the game_id comes from OpticOdds). Files with `{game_id}.csv` give various market odds (ex: moneyline, team_total, first_xx_overs_team_total) for sportsbooks like Fanduel, 1xbet, bet365, etc.
 - Files with `{game_id}cricinfo.csv` give live scores on regular time intervals throughout the course of that game
-- Files with `{game_id}final.csv` combines the `{game_id}.csv` and `{game_id}cricinfo.csv` table by joining the tables on timestamp. This is the final file which would eventually be used to compare with the prediction tool. 
+- Files with `{game_id}final.csv` combines the `{game_id}.csv` and `{game_id}cricinfo.csv` table by joining the tables on timestamp. This is the final file which would eventually be used to compare with the prediction tool.
+
+- **Note**: I have included a sample of the data for a given game in `Data_Samples/`
+
+
 
